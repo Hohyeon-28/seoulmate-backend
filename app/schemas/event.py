@@ -31,5 +31,8 @@ class EventOut(BaseModel):
     #  place 관련 정보도 포함되어야 함
     place_id: int
     place_name: Optional[str]
+    latitude: float
+    longitude: float
+    
     class Config:
         orm_mode = True

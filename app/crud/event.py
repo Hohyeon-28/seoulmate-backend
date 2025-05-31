@@ -80,6 +80,8 @@ def search_events(
             "detail_url": e.detail_url,
             "place_id": e.place_id,
             "place_name": e.place.name,
+            "latitude": e.place.latitude,
+            "longitude": e.place.longitude,
             "category": e.category,
             "expected_attendees": expected_now if expected_now is not None else "현재 운영 중이 아님",
             "expected_attendance_by_hour": hourly

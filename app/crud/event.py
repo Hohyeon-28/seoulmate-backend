@@ -67,16 +67,6 @@ def search_events(
         current_hour_str = now.strftime("%H:00")
         expected_now = hourly.get(current_hour_str)
 
-        # 시간대 필터링
-        filtered_hourly = {}
-        for hour, count in hourly.items():
-            hour_int = int(hour.split(":")[0])
-            if target_date > today:
-                filtered_hourly[hour] = count
-            elif target_date == today and hour_int >= now_hour_int:
-                filtered_hourly[hour] = count
-            elif target_date < today:
-                continue  # 지난 날짜는 표시하지 않음
 
         result.append({
             "event_id": e.event_id,
@@ -92,7 +82,7 @@ def search_events(
             "place_name": e.place.name,
             "category": e.category,
             "expected_attendees": expected_now if expected_now is not None else "현재 운영 중이 아님",
-            "expected_attendance_by_hour": filtered_hourly  # 필터링된 시간대만 포함
+            "expected_attendance_by_hour": hourly
         })
 
     return result

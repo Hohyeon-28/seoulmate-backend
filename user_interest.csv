@@ -1,0 +1,4 @@
+﻿user_id,email,hashed_password,age,preferred_genre,event_id,bookmarked_at
+1,alice@example.com,hashed_pw_1,25,전시/미술,198,2025-05-25 10:00
+1,alice@example.com,hashed_pw_1,25,전시/미술,559,2025-05-27 9:45
+2,bob@example.com,hashed_pw_2,32,축제/행사,231,2025-05-26 14:30

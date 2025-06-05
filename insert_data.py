@@ -1,4 +1,4 @@
-# insert_place_and_event.py
+# insert_data.py
 # place.csv에서 Place와 Event 테이블에 동시에 insert하는 스크립트
 from sqlalchemy.orm import Session
 from app.models.place import Place
@@ -40,7 +40,6 @@ def insert_places_and_events_from_csv(db: Session, csv_path: str, dong_info: lis
             district = matched_dong["district"]
             dong = matched_dong["dong"]
 
-
             # 장소 중복 확인
             place = db.query(Place).filter_by(name=place_name).first()
             if not place:
@@ -56,23 +55,41 @@ def insert_places_and_events_from_csv(db: Session, csv_path: str, dong_info: lis
                 db.commit()
                 db.refresh(place)
 
-            # 이벤트 추가
-            event = Event(
-                place_id=place.place_id,
-                title=row["공연/행사명"],
-                start_date=row["시작일"],
-                end_date=row["종료일"],
-                target=row["이용대상"],
-                price=row["이용요금"],
-                is_free=row["유무료"],
-                image_url=row["대표이미지"],
-                detail_url=row["문화포털상세URL"],
-                category=row["대분류"],
-                expected_attendees=predict_attendees(row["대분류"], population),
-                expected_attendance_by_hour=predict_attendance_by_hour(population, row["대분류"])
-            )
-            db.add(event)
+            # 기존 이벤트 중복 확인 (같은 장소 + 제목 기준)
+            event = db.query(Event).filter_by(place_id=place.place_id, title=row["공연/행사명"]).first()
+
+            if event:
+                # 기존 이벤트가 있다면 갱신
+                event.start_date = row["시작일"]
+                event.end_date = row["종료일"]
+                event.target = row["이용대상"]
+                event.price = row["이용요금"]
+                event.is_free = row["유무료"]
+                event.image_url = row["대표이미지"]
+                event.detail_url = row["문화포털상세URL"]
+                event.category = row["대분류"]
+                event.expected_attendees = predict_attendees(row["대분류"], population)
+                event.expected_attendance_by_hour = predict_attendance_by_hour(population, row["대분류"])
+            else:
+                # 기존 이벤트 없으면 새로 추가
+                event = Event(
+                    place_id=place.place_id,
+                    title=row["공연/행사명"],
+                    start_date=row["시작일"],
+                    end_date=row["종료일"],
+                    target=row["이용대상"],
+                    price=row["이용요금"],
+                    is_free=row["유무료"],
+                    image_url=row["대표이미지"],
+                    detail_url=row["문화포털상세URL"],
+                    category=row["대분류"],
+                    expected_attendees=predict_attendees(row["대분류"], population),
+                    expected_attendance_by_hour=predict_attendance_by_hour(population, row["대분류"])
+                )
+                db.add(event)
+
         db.commit()
+
 
 
 def insert_users_and_interests_from_csv(db: Session, csv_path: str):

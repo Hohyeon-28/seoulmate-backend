@@ -1,5 +1,5 @@
 # app/models/interest.py
-from sqlalchemy import Column, Integer, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, ForeignKey, DateTime, UniqueConstraint
 from sqlalchemy.orm import relationship
 from app.database import Base
 from datetime import datetime, timezone
@@ -18,3 +18,7 @@ class Interest(Base):
     )
     user = relationship(User, back_populates="interests")
     event = relationship(Event, back_populates="interests")
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "event_id", name="interests_unique"),
+    )

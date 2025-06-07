@@ -1,5 +1,5 @@
 # app/models/event.py
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, JSON
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, JSON, UniqueConstraint
 from sqlalchemy.orm import relationship
 from app.database import Base
 
@@ -23,3 +23,7 @@ class Event(Base):
   
     place = relationship("Place", back_populates="events")
     interests = relationship("Interest", back_populates="event")
+
+    __table_args__ = (
+        UniqueConstraint("place_id", "title", name="event_unique_place_title"),
+    )

@@ -14,13 +14,14 @@ import pandas as pd
 
 # dong_info는 외부에서 불러오도록 전달받음 (예: dong_info.csv 파싱 후 dict list)
 def insert_places_and_events_from_csv(db: Session, csv_path: str, dong_info: list):
+    seen_events = set()  # (place_id, title) 조합 저장용
+
     with open(csv_path, encoding="utf-8-sig") as f:
         reader = csv.DictReader(f)
         for row in reader:
             # 열 이름과 값 모두 공백 제거
             row = {k.strip(): v.strip() for k, v in row.items()}
 
-            # 위도/경도 값 디버깅 로그
             if not row["위도"] or not row["경도"]:
                 print(f"[SKIP] 위도 또는 경도 누락됨: {row}")
                 continue
@@ -55,11 +56,18 @@ def insert_places_and_events_from_csv(db: Session, csv_path: str, dong_info: lis
                 db.commit()
                 db.refresh(place)
 
-            # 기존 이벤트 중복 확인 (같은 장소 + 제목 기준)
-            event = db.query(Event).filter_by(place_id=place.place_id, title=row["공연/행사명"]).first()
+            title = row["공연/행사명"]
+            event_key = (place.place_id, title)
+
+            # 이미 처리한 조합이면 스킵
+            if event_key in seen_events:
+                continue
+            seen_events.add(event_key)
+
+            # 기존 이벤트 중복 확인
+            event = db.query(Event).filter_by(place_id=place.place_id, title=title).first()
 
             if event:
-                # 기존 이벤트가 있다면 갱신
                 event.start_date = row["시작일"]
                 event.end_date = row["종료일"]
                 event.target = row["이용대상"]
@@ -71,10 +79,9 @@ def insert_places_and_events_from_csv(db: Session, csv_path: str, dong_info: lis
                 event.expected_attendees = predict_attendees(row["대분류"], population)
                 event.expected_attendance_by_hour = predict_attendance_by_hour(population, row["대분류"])
             else:
-                # 기존 이벤트 없으면 새로 추가
                 event = Event(
                     place_id=place.place_id,
-                    title=row["공연/행사명"],
+                    title=title,
                     start_date=row["시작일"],
                     end_date=row["종료일"],
                     target=row["이용대상"],
@@ -89,6 +96,7 @@ def insert_places_and_events_from_csv(db: Session, csv_path: str, dong_info: lis
                 db.add(event)
 
         db.commit()
+
 
 
 
